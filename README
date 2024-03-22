@@ -1,0 +1,21 @@
+﻿[RELEASE]
+#2024/3/22
+
+[FILE]
+├── config.ini
+├── fake_socflash_x86_64
+├── README
+└── update_bmc
+
+[ENV]
+linux x86_64 with POSIX shell
+  
+[sample]
+update 1st flash onboard and preserve config
+./update_bmc 0 romx.ima REFERSH
+
+update 1st flash onboard and preserve no config
+./update_bmc 0 romx.ima WIPE
+
+update 2nd flash onboard and preserve config
+./update_bmc 1 romx.ima REFERSH

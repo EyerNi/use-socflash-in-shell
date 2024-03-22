@@ -1,0 +1,123 @@
+#2024/3/22 EyerNi( ͡° ͜ʖ ͡°)
+#!/bin/bash
+
+function pre_run()
+{
+  CHIP_OFFSET=$(grep 'chip_offset:' config.ini | sed 's?chip_offset:??')
+  IMAGE_OFFSET=$(grep 'image_offset:' config.ini | sed 's?image_offset:??')
+  PLATFORM_BALL=$(grep 'platform_ball:' config.ini | sed 's?platform_ball:??')
+}
+
+function arch_check()
+{ 
+  echo -e "**************************************"
+  echo -e "\033[32m processing arch check \033[0m"
+  echo 
+
+  CMD=`uname -m | cut -c 1-6`
+  if [ "$CMD" != "x86_64" ]; then
+    echo -e "\033[31m not a x86_64 arch computer , bye bye ! \033[0m"
+    exit 1
+  fi
+  echo -e " OK"
+  echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo
+}
+
+function print_help()
+{
+  echo -e "**************************************"
+  echo -e "\033[32m                               tool brife
+  USAGE :
+                           ____> "0" ----->1st 
+                          |      "1" ----->2nd
+                          |  
+                          |     ___>"romx.ima"  ---> the image's name
+                          |    |
+                          |    | 
+         ./40_update_bmc ARG1 ARG2 ARG3
+                                    |          
+                                    |___>"WIPE"      --->whole image update
+                                         "REFERSH"   --->only update none conf area
+  \033[0m";
+  echo -e " OK"
+  echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo
+}
+
+function wipe_update_chip()
+{
+  echo -e "**************************************"
+  echo -e "\033[32m processing whole chip update \033[0m"
+  echo
+
+ ./fake_socflash_x86_64 option=g if=$2 gpio_b=$PLATFORM_BALL"0"  gpio_f=$PLATFORM_BALL"1" cs=$1
+  
+  echo -e " OK , please wait BMC recovery "
+  echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo
+
+}
+
+function preserve_update_chip()
+{
+  echo -e "**************************************"
+  echo -e "\033[32m processing keep conf chip update \033[0m"
+  echo
+
+  ./fake_socflash_x86_64 option=g if=$2 gpio_b=$PLATFORM_BALL"0"  gpio_f=$PLATFORM_BALL"1" cs=$1 skip=$CHIP_OFFSET offset=$IMAGE_OFFSET
+  
+  echo -e " OK , please wait BMC recovery "
+  echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo
+}
+
+function MAIN()
+{
+  if [ ! -n "$1" ];then
+    print_help;
+    exit 1
+  fi
+
+  if [ ! -n "$2" ];then
+    print_help;
+    exit 1
+  fi
+
+  if [ ! -n "$3" ];then
+    print_help;
+    exit 1
+  fi
+  
+  arch_check;
+
+  pre_run;
+
+  if [ "$1" != "0" ];then
+    if [ "$1" != "1" ];then
+     echo -e "1"
+     print_help;
+     exit 1
+    fi
+  fi
+
+  if [ "$3" != "WIPE" ];then
+    if [ "$3" != "REFERSH" ];then
+     echo -e "2"
+     print_help;
+     exit 1
+    fi
+  fi
+
+  if [ "$3" == "WIPE" ];then
+    wipe_update_chip $1 $2;
+    exit 1
+  elif [ "$3" == "REFERSH" ];then
+    preserve_update_chip $1 $2;
+    exit 1
+  fi
+
+  print_help;
+}
+
+MAIN $1 $2 $3
